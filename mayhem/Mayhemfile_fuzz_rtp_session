@@ -1,0 +1,21 @@
+project: savantenvs/rtpproxy
+target: fuzz_rtp_session
+# fuzz_rtp_session is format-gated (12-byte RTP header); random bytes hit negligible edges without a valid seed.
+#
+# TMPDIR=/dev/shm: libFuzzer's -fork=N orchestrator (Mayhem's real cloud fuzzing mode) writes its own
+# merge-control scratch file under $TMPDIR/libFuzzerTemp.FuzzWithFork*.dir (FuzzerFork.cpp), independent
+# of this Mayhemfile's `cwd:`. Under Mayhem's read-only coverage-collection mode, the default /tmp isn't
+# writable, so fork mode fails immediately with "MERGE-OUTER: failed to write to the control file" and
+# never actually fuzzes (0 new edges despite a clean run, no crash, seeds loading fine) — confirmed by
+# reproducing locally with `docker run --read-only --tmpfs /dev/shm:rw,exec -fork=4`: fails without
+# TMPDIR set, fuzzes healthily (cov 1479->1581 in 25s) with TMPDIR=/dev/shm.
+testsuite:
+  - https://$MAYHEM_DOMAIN/$MAYHEM_PROJECT/$MAYHEM_TARGET/testsuite.tar
+  - file://mayhem/fuzz_rtp_session/testsuite
+cmds:
+  - cmd: /mayhem/fuzz_rtp_session
+    libfuzzer: true
+    dictionary: /mayhem/mayhem/fuzz_rtp_session.dict
+    cwd: /dev/shm
+    env:
+      TMPDIR: /dev/shm

@@ -1,0 +1,8 @@
+project: savantenvs/rtpproxy
+target: fuzz_rtcp_parser
+testsuite:
+  - https://$MAYHEM_DOMAIN/$MAYHEM_PROJECT/$MAYHEM_TARGET/testsuite.tar
+  - file://mayhem/fuzz_rtcp_parser/testsuite
+cmds:
+  - cmd: /mayhem/fuzz_rtcp_parser
+    libfuzzer: true
